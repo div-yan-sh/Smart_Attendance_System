@@ -1,0 +1,142 @@
+Build a comprehensive Smart Attendance Management System with Analytics as a full-stack web application. This digital solution should automate attendance tracking for educational institutions, replacing manual roll calls and paper registers. The system must record attendance automatically, calculate percentages in real-time, and provide interactive analytics dashboards.
+
+## Technology Stack (Strict Requirements)
+
+**Frontend:**
+- React.js (functional components with Hooks)
+- HTML5 and CSS3
+- Tailwind CSS for styling
+- JavaScript (ES6+)
+
+**Backend:**
+- Node.js
+- Express.js
+
+**Database:**
+- MongoDB with Mongoose ODM
+
+**Authentication:**
+- JWT (JSON Web Tokens) with refresh token support
+
+**Analytics Visualization:**
+- Chart.js and Recharts
+
+## Database Schema Design
+
+Design and implement the following MongoDB collections with appropriate indexes:
+
+**Student Collection:**
+- studentId (unique, auto-generated)
+- name (required)
+- email (unique, required)
+- password (hashed)
+- department (required)
+- semester (required)
+- createdAt, updatedAt timestamps
+
+**Faculty Collection:**
+- facultyId (unique, auto-generated)
+- name (required)
+- email (unique, required)
+- password (hashed)
+- createdAt, updatedAt timestamps
+
+**Subject Collection:**
+- subjectId (unique, auto-generated)
+- subjectName (required)
+- subjectCode (unique, required)
+- facultyId (reference to Faculty)
+- department
+- semester
+- createdAt, updatedAt timestamps
+
+**Attendance Collection:**
+- attendanceId (unique, auto-generated)
+- studentId (reference to Student, required)
+- subjectId (reference to Subject, required)
+- facultyId (reference to Faculty)
+- date (required, indexed)
+- status (enum: "Present", "Absent", "Late")
+- markedAt (timestamp)
+- createdAt, updatedAt timestamps
+
+**Create compound indexes for:**
+- studentId + subjectId + date (to prevent duplicate attendance entries)
+- date + subjectId (for efficient date-range queries)
+
+## Role-Based Access Control
+
+Implement three distinct user roles with specific permissions:
+
+### Admin Module
+
+- User Management: Create, read, update, delete (CRUD) operations for students, faculty, and other admins
+- Subject Management: Assign subjects to faculty, manage subject-faculty mappings
+- Class Management: Create and manage classes, sections, or batches
+- Global Reports: Generate system-wide attendance reports with filters (date range, department, semester, subject)
+- System Monitoring: View active users, daily attendance statistics, system health metrics
+- Dashboard: Display total students, faculty, subjects, and overall attendance statistics with charts
+
+### Faculty Module
+
+- Authentication: Secure JWT-based login with session management
+- Class Management: Create, join, and manage classes assigned to them
+- Attendance Marking: Digital attendance entry with features:
+  - Bulk marking (mark all present/absent at once)
+  - Individual student marking
+  - Date and session selection
+  - Edit/correct previously marked attendance (within 24 hours)
+- Attendance Records: View attendance history filtered by date, subject, class
+- Analytics Dashboard:
+  - Class-wise attendance percentage
+  - Subject-wise attendance trends
+  - Low attendance student alerts
+  - Weekly/monthly attendance patterns using Recharts
+- Report Generation: Export attendance reports as CSV/PDF
+
+### Student Module
+
+- Login Dashboard: Secure access with profile view
+- Overall Attendance: Display cumulative attendance percentage across all subjects
+- Subject-wise Tracking: Individual subject attendance percentages with visual indicators
+- Attendance History: Calendar view or list view of attendance records by date
+- Low Attendance Alerts: Visual warnings when attendance falls below configurable thresholds (default: 75%)
+- Subject Details: View subject information, faculty details, and schedule
+
+## API Endpoint Design
+
+Design RESTful API endpoints following best practices:
+
+**Authentication Endpoints:**
+- POST /api/auth/register (admin only)
+- POST /api/auth/login
+- POST /api/auth/refresh-token
+- POST /api/auth/logout
+
+**Student Endpoints:**
+- GET /api/students (admin/faculty)
+- GET /api/students/:id
+- POST /api/students (admin)
+- PUT /api/students/:id (admin)
+- DELETE /api/students/:id (admin)
+
+**Faculty Endpoints:**
+- GET /api/faculty (admin)
+- GET /api/faculty/:id
+- POST /api/faculty (admin)
+- PUT /api/faculty/:id (admin)
+
+**Subject Endpoints:**
+- GET /api/subjects
+- GET /api/subjects/:id
+- POST /api/subjects (admin)
+- PUT /api/subjects/:id (admin)
+- DELETE /api/subjects/:id (admin)
+- GET /api/subjects/faculty/:facultyId
+
+**Attendance Endpoints:**
+- GET /api/attendance (with query filters: date, subjectId, studentId)
+- POST /api/attendance (faculty marks attendance)
+- PUT /api/attendance/:id (edit attendance)
+- GET /api/attendance/student/:studentId (student's attendance)
+- GET /api/attendance/subject/:subjectId...

@@ -3,20 +3,32 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Smart Attendance Management System API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: students
+    description: Student management
+  - name: faculty
+    description: Faculty management
+  - name: subjects
+    description: Subject management
+  - name: attendance
+    description: Attendance tracking
+  - name: analytics
+    description: Analytics and reporting
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +36,890 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── AUTH ──────────────────────────────────────────────────────────────────
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login (student, faculty, or admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout current user
+      responses:
+        "200":
+          description: Logged out
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Unauthorized
+
+  # ─── STUDENTS ──────────────────────────────────────────────────────────────
+
+  /students:
+    get:
+      operationId: listStudents
+      tags: [students]
+      summary: List all students
+      parameters:
+        - in: query
+          name: department
+          schema:
+            type: string
+        - in: query
+          name: semester
+          schema:
+            type: string
+        - in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of students
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Student"
+    post:
+      operationId: createStudent
+      tags: [students]
+      summary: Create a new student
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentInput"
+      responses:
+        "201":
+          description: Student created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+
+  /students/{id}:
+    get:
+      operationId: getStudent
+      tags: [students]
+      summary: Get student by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Student found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateStudent
+      tags: [students]
+      summary: Update student
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+    delete:
+      operationId: deleteStudent
+      tags: [students]
+      summary: Delete student
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /students/{id}/attendance-summary:
+    get:
+      operationId: getStudentAttendanceSummary
+      tags: [students]
+      summary: Get per-subject attendance summary for a student
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Attendance summary
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubjectAttendanceSummary"
+
+  # ─── FACULTY ───────────────────────────────────────────────────────────────
+
+  /faculty:
+    get:
+      operationId: listFaculty
+      tags: [faculty]
+      summary: List all faculty
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of faculty
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Faculty"
+    post:
+      operationId: createFaculty
+      tags: [faculty]
+      summary: Create a new faculty member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FacultyInput"
+      responses:
+        "201":
+          description: Faculty created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Faculty"
+
+  /faculty/{id}:
+    get:
+      operationId: getFaculty
+      tags: [faculty]
+      summary: Get faculty by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Faculty found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Faculty"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateFaculty
+      tags: [faculty]
+      summary: Update faculty
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FacultyUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Faculty"
+    delete:
+      operationId: deleteFaculty
+      tags: [faculty]
+      summary: Delete faculty
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── SUBJECTS ──────────────────────────────────────────────────────────────
+
+  /subjects:
+    get:
+      operationId: listSubjects
+      tags: [subjects]
+      summary: List all subjects
+      parameters:
+        - in: query
+          name: department
+          schema:
+            type: string
+        - in: query
+          name: semester
+          schema:
+            type: string
+        - in: query
+          name: facultyId
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of subjects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subject"
+    post:
+      operationId: createSubject
+      tags: [subjects]
+      summary: Create a new subject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubjectInput"
+      responses:
+        "201":
+          description: Subject created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subject"
+
+  /subjects/{id}:
+    get:
+      operationId: getSubject
+      tags: [subjects]
+      summary: Get subject by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Subject found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subject"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateSubject
+      tags: [subjects]
+      summary: Update subject
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubjectUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subject"
+    delete:
+      operationId: deleteSubject
+      tags: [subjects]
+      summary: Delete subject
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── ATTENDANCE ─────────────────────────────────────────────────────────────
+
+  /attendance:
+    get:
+      operationId: listAttendance
+      tags: [attendance]
+      summary: List attendance records with filters
+      parameters:
+        - in: query
+          name: subjectId
+          schema:
+            type: integer
+        - in: query
+          name: studentId
+          schema:
+            type: integer
+        - in: query
+          name: date
+          schema:
+            type: string
+        - in: query
+          name: dateFrom
+          schema:
+            type: string
+        - in: query
+          name: dateTo
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Attendance records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttendanceRecord"
+    post:
+      operationId: markAttendance
+      tags: [attendance]
+      summary: Mark attendance (bulk or single)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttendanceInput"
+      responses:
+        "200":
+          description: Attendance marked
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttendanceRecord"
+
+  /attendance/{id}:
+    patch:
+      operationId: updateAttendance
+      tags: [attendance]
+      summary: Update a single attendance record
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttendanceUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttendanceRecord"
+        "404":
+          description: Not found
+
+  # ─── ANALYTICS ──────────────────────────────────────────────────────────────
+
+  /analytics/dashboard:
+    get:
+      operationId: getDashboardStats
+      tags: [analytics]
+      summary: Get admin/faculty dashboard statistics
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /analytics/attendance-trends:
+    get:
+      operationId: getAttendanceTrends
+      tags: [analytics]
+      summary: Get weekly/monthly attendance trends
+      parameters:
+        - in: query
+          name: subjectId
+          schema:
+            type: integer
+        - in: query
+          name: period
+          schema:
+            type: string
+            enum: [weekly, monthly]
+        - in: query
+          name: dateFrom
+          schema:
+            type: string
+        - in: query
+          name: dateTo
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Attendance trends
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttendanceTrendPoint"
+
+  /analytics/low-attendance:
+    get:
+      operationId: getLowAttendanceStudents
+      tags: [analytics]
+      summary: Get students with low attendance (below threshold)
+      parameters:
+        - in: query
+          name: threshold
+          schema:
+            type: integer
+        - in: query
+          name: subjectId
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Students with low attendance
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LowAttendanceAlert"
+
+  /analytics/subject-stats:
+    get:
+      operationId: getSubjectStats
+      tags: [analytics]
+      summary: Get attendance statistics by subject
+      responses:
+        "200":
+          description: Subject-wise stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubjectStat"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    # ─── AUTH ────────────────────────────────────────────────────────────────
+
+    LoginInput:
+      type: object
+      required: [email, password, role]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum: [admin, faculty, student]
+
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/AuthUser"
+
+    AuthUser:
+      type: object
+      required: [id, name, email, role]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [admin, faculty, student]
+        department:
+          type: ["string", "null"]
+        semester:
+          type: ["string", "null"]
+
+    # ─── STUDENT ─────────────────────────────────────────────────────────────
+
+    Student:
+      type: object
+      required: [id, name, email, department, semester, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        department:
+          type: string
+        semester:
+          type: string
+        createdAt:
+          type: string
+
+    StudentInput:
+      type: object
+      required: [name, email, password, department, semester]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        department:
+          type: string
+        semester:
+          type: string
+
+    StudentUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        department:
+          type: string
+        semester:
+          type: string
+        password:
+          type: ["string", "null"]
+
+    SubjectAttendanceSummary:
+      type: object
+      required: [subjectId, subjectName, subjectCode, totalClasses, present, absent, late, percentage]
+      properties:
+        subjectId:
+          type: integer
+        subjectName:
+          type: string
+        subjectCode:
+          type: string
+        totalClasses:
+          type: integer
+        present:
+          type: integer
+        absent:
+          type: integer
+        late:
+          type: integer
+        percentage:
+          type: number
+
+    # ─── FACULTY ─────────────────────────────────────────────────────────────
+
+    Faculty:
+      type: object
+      required: [id, name, email, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        createdAt:
+          type: string
+
+    FacultyInput:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+
+    FacultyUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: ["string", "null"]
+
+    # ─── SUBJECT ─────────────────────────────────────────────────────────────
+
+    Subject:
+      type: object
+      required: [id, subjectName, subjectCode, department, semester, createdAt]
+      properties:
+        id:
+          type: integer
+        subjectName:
+          type: string
+        subjectCode:
+          type: string
+        department:
+          type: string
+        semester:
+          type: string
+        facultyId:
+          type: ["integer", "null"]
+        facultyName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    SubjectInput:
+      type: object
+      required: [subjectName, subjectCode, department, semester]
+      properties:
+        subjectName:
+          type: string
+        subjectCode:
+          type: string
+        department:
+          type: string
+        semester:
+          type: string
+        facultyId:
+          type: ["integer", "null"]
+
+    SubjectUpdate:
+      type: object
+      properties:
+        subjectName:
+          type: string
+        subjectCode:
+          type: string
+        department:
+          type: string
+        semester:
+          type: string
+        facultyId:
+          type: ["integer", "null"]
+
+    # ─── ATTENDANCE ──────────────────────────────────────────────────────────
+
+    AttendanceRecord:
+      type: object
+      required: [id, studentId, studentName, subjectId, subjectName, date, status, createdAt]
+      properties:
+        id:
+          type: integer
+        studentId:
+          type: integer
+        studentName:
+          type: string
+        subjectId:
+          type: integer
+        subjectName:
+          type: string
+        facultyId:
+          type: ["integer", "null"]
+        date:
+          type: string
+        status:
+          type: string
+          enum: [Present, Absent, Late]
+        createdAt:
+          type: string
+
+    AttendanceEntry:
+      type: object
+      required: [studentId, status]
+      properties:
+        studentId:
+          type: integer
+        status:
+          type: string
+          enum: [Present, Absent, Late]
+
+    AttendanceInput:
+      type: object
+      required: [subjectId, date, entries]
+      properties:
+        subjectId:
+          type: integer
+        date:
+          type: string
+        facultyId:
+          type: ["integer", "null"]
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttendanceEntry"
+
+    AttendanceUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [Present, Absent, Late]
+
+    # ─── ANALYTICS ───────────────────────────────────────────────────────────
+
+    DashboardStats:
+      type: object
+      required: [totalStudents, totalFaculty, totalSubjects, overallAttendancePercentage, todayPresent, todayAbsent, totalAttendanceRecords]
+      properties:
+        totalStudents:
+          type: integer
+        totalFaculty:
+          type: integer
+        totalSubjects:
+          type: integer
+        overallAttendancePercentage:
+          type: number
+        todayPresent:
+          type: integer
+        todayAbsent:
+          type: integer
+        totalAttendanceRecords:
+          type: integer
+
+    AttendanceTrendPoint:
+      type: object
+      required: [date, present, absent, late, total]
+      properties:
+        date:
+          type: string
+        present:
+          type: integer
+        absent:
+          type: integer
+        late:
+          type: integer
+        total:
+          type: integer
+
+    LowAttendanceAlert:
+      type: object
+      required: [studentId, studentName, department, semester, subjectId, subjectName, percentage, totalClasses, present]
+      properties:
+        studentId:
+          type: integer
+        studentName:
+          type: string
+        department:
+          type: string
+        semester:
+          type: string
+        subjectId:
+          type: integer
+        subjectName:
+          type: string
+        percentage:
+          type: number
+        totalClasses:
+          type: integer
+        present:
+          type: integer
+
+    SubjectStat:
+      type: object
+      required: [subjectId, subjectName, subjectCode, department, semester, totalClasses, averageAttendance]
+      properties:
+        subjectId:
+          type: integer
+        subjectName:
+          type: string
+        subjectCode:
+          type: string
+        department:
+          type: string
+        semester:
+          type: string
+        totalClasses:
+          type: integer
+        averageAttendance:
+          type: number
